@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Prohlížeč</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Import Three.js z CDN bez nutnosti instalace -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
 </head>
 <body class="viewer-body">
 
@@ -14,35 +23,26 @@
     </header>
 
     <main class="workspace">
-        <!-- Kontejner pro jakýkoli 3D model -->
-        <section id="model-viewport" class="viewport">
-            <div class="placeholder-text">
-                Zde se vykreslí 3D model
-            </div>
+        <!-- Kontejner, do kterého script.js vykreslí 3D kostru -->
+        <section id="model-viewport" class="viewport"></section>
 
-            <!-- Vrstva připravená pro interaktivní body (hotspots) přímo v prostoru modelu -->
-            <div class="hotspots-layer">
-                <!-- Příklad bodu, který pak napojíš na model -->
-                <button class="hotspot" style="top: 40%; left: 50%;" title="Ukázkový bod">1</button>
-            </div>
-        </section>
-
-        <!-- Boční panel připravený pro popisky vybraných částí -->
+        <!-- Boční panel pro popisky vybraných kostí -->
         <aside class="info-panel">
             <div class="panel-header">
                 <h2>Detail vybrané části</h2>
-                <span class="badge">Kategorie / Typ</span>
+                <span id="bone-category" class="badge">Vyberte kost</span>
             </div>
             <div class="panel-content">
-                <p>Klikněte na libovolný bod na 3D modelu pro zobrazení podrobných informací a popisků k dané části.</p>
+                <p>Klikněte přímo na libovolnou kost na 3D modelu pro její zvýraznění a zobrazení informací.</p>
                 
                 <div class="detail-item">
-                    <h3>Název prvku</h3>
-                    <p>Zde se bude dynamicky měnit text podle toho, na jakou část modelu uživatel klikne.</p>
+                    <h3 id="bone-title">Žádná kost není vybrána</h3>
+                    <p id="bone-desc">Po kliknutí na model se zde zobrazí název a popis dané kosti.</p>
                 </div>
             </div>
         </aside>
     </main>
 
+    <script type="module" src="script.js"></script>
 </body>
 </html>
