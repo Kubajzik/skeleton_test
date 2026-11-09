@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Prohlížeč</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Import Three.js z CDN bez nutnosti instalace -->
     <script type="importmap">
         {
             "imports": {
@@ -23,15 +22,30 @@
     </header>
 
     <main class="workspace">
-        <!-- Kontejner, do kterého script.js vykreslí 3D kostru -->
+        <!-- Kontejner pro 3D model -->
         <section id="model-viewport" class="viewport"></section>
 
-        <!-- Boční panel pro popisky vybraných kostí -->
+        <!-- Boční panel s filtrem a popisky -->
         <aside class="info-panel">
+            <!-- Filtr částí těla -->
+            <div class="filter-section">
+                <h3>Zobrazit část těla</h3>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="Vše">Celá kostra</button>
+                    <button class="filter-btn" data-filter="Lebka">Lebka</button>
+                    <button class="filter-btn" data-filter="Páteř">Páteř</button>
+                    <button class="filter-btn" data-filter="Hrudník">Hrudník</button>
+                    <button class="filter-btn" data-filter="Horní končetina">Horní končetina</button>
+                    <button class="filter-btn" data-filter="Pánev">Pánev</button>
+                    <button class="filter-btn" data-filter="Dolní končetina">Dolní končetina</button>
+                </div>
+            </div>
+
             <div class="panel-header">
                 <h2>Detail vybrané části</h2>
                 <span id="bone-category" class="badge">Vyberte kost</span>
             </div>
+
             <div class="panel-content">
                 <p>Klikněte přímo na libovolnou kost na 3D modelu pro její zvýraznění a zobrazení informací.</p>
                 
