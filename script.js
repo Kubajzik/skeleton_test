@@ -38,7 +38,7 @@ const skupinyCastiTela = {
     ],
     "Dolní končetina": [
         "FMA24474", "FMA24475", "FMA24477", "FMA24478", "FMA24480", "FMA24481",
-        "FMA24482", "FMA24483", "FMA24486", "FMA24487", "FMA24497", "FMA24498", "FMA24500", "FMA24501",
+        "FMA24482", "FMA24483", "FMA24486", "FMA24487", "FMA24497", "FMA24498", "FMA24490", "FMA24500", "FMA24501",
         "FMA24507", "FMA24508", "FMA24509", "FMA24510", "FMA24511", "FMA24512", "FMA24513", "FMA24514",
         "FMA24515", "FMA24516", "FMA24521", "FMA24522", "FMA24523", "FMA24524", "FMA24525", "FMA24526",
         "FMA24528", "FMA24529", "FMA230986", "FMA230988",
@@ -93,7 +93,6 @@ const kostiData = {
     "FMA24481": { nazev: "Kost lýtková levá (Fibula)", popis: "Tenčí kost bérce na vnější straně." }
 };
 
-// Pomocná funkce, která zjistí kategorii jakékoliv kosti podle jejího ID
 function ziskejKategorii(idKosti) {
     for (const [kategorie, seznamId] of Object.entries(skupinyCastiTela)) {
         if (seznamId.includes(idKosti)) return kategorie;
@@ -144,20 +143,27 @@ loader.load('kostra.glb', (gltf) => {
     scene.add(nactenyModel);
 });
 
-// 5. FILTROVÁNÍ ČÁSTÍ TĚLA A VYCENTROVÁNÍ KAMERY
-function aplikujFiltr(kategorie) {
+// 5. VÍCENÁSOBNÉ FILTROVÁNÍ ČÁSTÍ TĚLA A VYCENTROVÁNÍ KAMERY
+const aktivniFiltry = new Set(); // Uchovává všechny současně zakliknuté části těla
+
+function aplikujFiltry() {
     if (!nactenyModel) return;
 
     const box = new THREE.Box3();
+    const zobrazitVse = aktivniFiltry.size === 0;
+
+    // Posbíráme ID všech kostí ze všech zakliknutých kategorií
+    const povoleneKosti = new Set();
+    if (!zobrazitVse) {
+        aktivniFiltry.forEach((kategorie) => {
+            const seznam = skupinyCastiTela[kategorie] || [];
+            seznam.forEach((id) => povoleneKosti.add(id));
+        });
+    }
 
     nactenyModel.traverse((child) => {
         if (child.isMesh) {
-            if (kategorie === "Vše") {
-                child.visible = true;
-            } else {
-                const povoleneKosti = skupinyCastiTela[kategorie] || [];
-                child.visible = povoleneKosti.includes(child.name);
-            }
+            child.visible = zobrazitVse ? true : povoleneKosti.has(child.name);
 
             if (child.visible) {
                 box.expandByObject(child);
@@ -165,7 +171,7 @@ function aplikujFiltr(kategorie) {
         }
     });
 
-    // Automatické vycentrování a přiblížení kamery na zobrazenou část
+    // Vycentrování a přiblížení kamery na všechny aktuálně viditelné části
     if (!box.isEmpty()) {
         const stred = box.getCenter(new THREE.Vector3());
         const velikost = box.getSize(new THREE.Vector3());
@@ -177,15 +183,38 @@ function aplikujFiltr(kategorie) {
     }
 }
 
-// Napojení kliknutí na filtrační tlačítka
+// Napojení kliknutí na filtrační tlačítka (podpora více záložek najednou)
 const tlacitkaFiltru = document.querySelectorAll('.filter-btn');
+const tlacitkoVse = document.querySelector('.filter-btn[data-filter="Vše"]');
+
 tlacitkaFiltru.forEach((btn) => {
     btn.addEventListener('click', () => {
-        tlacitkaFiltru.forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
+        const kategorie = btn.getAttribute('data-filter');
 
-        const zvolenyFiltr = btn.getAttribute('data-filter');
-        aplikujFiltr(zvolenyFiltr);
+        if (kategorie === "Vše") {
+            // Kliknutí na "Celá kostra" odznačí jednotlivé filtry a zobrazí vše
+            aktivniFiltry.clear();
+            tlacitkaFiltru.forEach((b) => b.classList.remove('active'));
+            tlacitkoVse.classList.add('active');
+        } else {
+            // Přepnutí (zapnutí/vypnutí) konkrétní části těla
+            if (aktivniFiltry.has(kategorie)) {
+                aktivniFiltry.delete(kategorie);
+                btn.classList.remove('active');
+            } else {
+                aktivniFiltry.add(kategorie);
+                btn.classList.add('active');
+            }
+
+            // Pokud není vybraná žádná část, automaticky zapneme "Celá kostra"
+            if (aktivniFiltry.size === 0) {
+                tlacitkoVse.classList.add('active');
+            } else {
+                tlacitkoVse.classList.remove('active');
+            }
+        }
+
+        aplikujFiltry();
     });
 });
 
@@ -208,7 +237,6 @@ container.addEventListener('pointerup', (e) => {
     mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-    // Bereme v úvahu pouze aktuálně viditelné kosti
     const zasahy = raycaster.intersectObjects(scene.children, true).filter((z) => z.object.visible);
 
     if (zasahy.length > 0) {
